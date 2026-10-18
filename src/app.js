@@ -95,3 +95,11 @@ for(const button of [$('start'),$('retry'),...$('levels').children]){
  button.addEventListener('keydown',event=>{if(event.key===' '||event.key==='Enter')button.classList.add('wood-pressed');});
  for(const type of ['keyup','blur'])button.addEventListener(type,()=>button.classList.remove('wood-pressed'));
 }
+
+function showSettingsPanel(rules=false){$('settingsPanel').hidden=rules;$('rulesPanel').hidden=!rules;$('settingsBack').hidden=!rules;$('settingsTitle').textContent=rules?'게임 방법':'설정';}
+$('settingsButton').onclick=()=>{if(g&&g.winner===null)pause();else gameAudio.setPaused(true);showSettingsPanel();$('settingsDialog').showModal();};
+$('closeSettings').onclick=()=>$('settingsDialog').close();
+$('rulesButton').onclick=()=>{showSettingsPanel(true);$('settingsBack').focus();};
+$('settingsBack').onclick=()=>{showSettingsPanel();$('rulesButton').focus();};
+$('settingsDialog').addEventListener('close',()=>{if(!g||g.winner!==null)gameAudio.setPaused(false);});
+$('settingsDialog').addEventListener('click',event=>{if(event.target===$('settingsDialog')){const rect=$('settingsDialog').getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)$('settingsDialog').close();}});
