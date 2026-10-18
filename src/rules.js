@@ -5,10 +5,10 @@ export const animals = [
 ];
 // Amounts other than beginner are provisional, editable balance values.
 export const levels = [
- {name:'초보',species:3,min:1800,max:2500,fee:10,reward:15},
- {name:'중수',species:6,min:900,max:1400,fee:15,reward:25},
- {name:'고수',species:9,min:350,max:650,fee:20,reward:35},
- {name:'초고수',species:12,min:200,max:350,fee:30,reward:50}
+ {name:'초보',species:3,min:2500,max:3000,fee:10,reward:15},
+ {name:'중수',species:6,min:1500,max:2500,fee:15,reward:25},
+ {name:'고수',species:9,min:1000,max:1500,fee:20,reward:35},
+ {name:'초고수',species:12,min:500,max:1000,fee:30,reward:50}
 ];
 export function canRing(cards) {
  const totals = new Map();
