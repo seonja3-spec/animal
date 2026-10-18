@@ -1,0 +1,14 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {canRing,createGame,levels,flip,ring,tops} from '../src/rules.js';
+import {claimDaily,charge} from '../src/wallet.js';
+const c=(count,animal='rat')=>({animal,count});
+const state=()=>({hands:[[c(1),c(2)],[c(3),c(4)]],piles:[[],[]],turn:0,winner:null});
+test('exact five of one species only',()=>{assert.ok(canRing([c(2),c(3)]));assert.ok(canRing([c(5),null]));assert.ok(!canRing([c(3),c(3)]));assert.ok(!canRing([c(2),c(3,'ox')]));});
+test('every difficulty has correct deck and species count',()=>{levels.forEach((l,i)=>{const g=createGame(i);assert.equal(g.selected.length,l.species);assert.equal(g.hands.flat().length,l.species*14);assert.equal(new Set(g.hands.flat().map(c=>c.animal)).size,l.species);});});
+test('turn alternates; old top gets covered',()=>{const g=state();assert.equal(flip(g,1),false);flip(g,0);flip(g,1);flip(g,0);assert.equal(tops(g)[0].count,2);assert.equal(g.piles[0].length,2);});
+test('correct bell collects both piles below hand and winner leads',()=>{const g=state();g.piles=[[c(1),c(2)],[c(3)]];const n=g.hands.flat().length+g.piles.flat().length;assert.equal(ring(g,1),'correct');assert.equal(g.turn,1);assert.deepEqual(g.piles,[[],[]]);assert.equal(g.hands[1].length,5);assert.equal(g.hands.flat().length,n);assert.equal(ring(g,0),'ignored');});
+test('wrong bell transfers one card and preserves open cards',()=>{const g=state();g.piles=[[c(2)],[c(2)]];assert.equal(ring(g,0),'wrong');assert.equal(g.hands[0].length,1);assert.equal(g.hands[1].length,3);assert.equal(g.piles.flat().length,2);});
+test('last card remains eligible until next turn; collecting rescues player',()=>{const g=state();g.hands[0]=[c(5)];flip(g,0);assert.equal(g.winner,null);ring(g,0);assert.equal(g.winner,null);assert.equal(g.hands[0].length,1);});
+test('empty hand loses on its turn; won match ignores additional rings',()=>{const g=state();g.hands[0]=[];flip(g,0);assert.equal(g.winner,1);assert.equal(ring(g,0),'ignored');});
+test('daily grant once per day; insufficient funds do not deduct',()=>{const w={coins:0,day:''};assert.ok(claimDaily(w,'2026-10-18'));assert.equal(w.coins,50);assert.ok(!claimDaily(w,'2026-10-18'));assert.ok(!charge(w,51));assert.equal(w.coins,50);assert.ok(charge(w,10));assert.equal(w.coins,40);assert.ok(claimDaily(w,'2026-10-19'));assert.equal(w.coins,90);});

@@ -1,0 +1,15 @@
+{
+  "name": "Animal Halli Galli",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "forwardPorts": [
+    5173
+  ],
+  "portsAttributes": {
+    "5173": {
+      "label": "동물 할리갈리",
+      "onAutoForward": "notify"
+    }
+  },
+  "postAttachCommand": "npm run dev",
+  "postCreateCommand": "npm install"
+}

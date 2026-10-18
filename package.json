@@ -1,0 +1,21 @@
+{
+  "name": "animal-halli-galli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 5173",
+    "test": "node --test test/*.test.js",
+    "build:web": "vite build",
+    "build": "vite build && ait build"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@apps-in-toss/web-framework": "^3.1.0"
+  },
+  "devDependencies": {
+    "vite": "^7.0.0"
+  }
+}
