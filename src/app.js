@@ -54,6 +54,8 @@ function startGame(i){
  $('difficultyMessage').textContent='';$('getCoins').hidden=true;
  $('difficulty').textContent=`${levels[selected].name} · 동물 ${levels[selected].species}종`;show('arena');schedule();
 }
+let welcomeBellTimer;
+$('welcomeBell').onclick=()=>{clearTimeout(welcomeBellTimer);$('welcomeBell').classList.add('tapped');welcomeBellTimer=setTimeout(()=>$('welcomeBell').classList.remove('tapped'),350);};
 $('start').onclick=()=>{$('difficultyMessage').textContent='';$('getCoins').hidden=true;show('difficultySelect');};
 $('backLobby').onclick=$('getCoins').onclick=()=>show('lobby');
 $('flip').onclick=()=>{if(!g||paused||g.turn!==0)return;flip(g,0);schedule();};
