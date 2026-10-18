@@ -21,11 +21,20 @@ function select(i){selected=i;[...$('levels').children].forEach((b,j)=>{b.classL
 const levelDescriptions=['천천히 감 잡기','익숙해졌다면 도전!','빠른 눈과 손이 필요해요','한순간도 방심 금지!'];
 const levelIcons=['🌱','🍀','🔥','👑'];
 levels.forEach((level,i)=>{const b=document.createElement('button');b.className='level';b.innerHTML=`<span class="level-icon" aria-hidden="true">${levelIcons[i]}</span><strong>${level.name}</strong><span>${levelDescriptions[i]}</span><small>동물 ${level.species}종 · 참가 ${level.fee}🪙</small><small class="level-reward">이기면 ${level.reward}🪙</small>`;b.onclick=()=>select(i);$('levels').append(b);});
-function card(el,c){el.replaceChildren();if(!c){el.classList.add('empty');const back=document.createElement('img');back.src='/assets/animals/bell1.webp';back.alt='';back.className='card-back';el.append(back);el.setAttribute('aria-label','아직 공개된 카드 없음');return;}el.classList.remove('empty');const a=animals.find(a=>a[0]===c.animal);el.setAttribute('aria-label',`${a[1]} ${c.count}마리`);const label=document.createElement('b');label.className='card-label';label.textContent=`${a[1]} · ${c.count}`;const grid=document.createElement('div');grid.className='animal-grid';grid.dataset.count=c.count;for(let i=0;i<c.count;i++){const animal=document.createElement('img');animal.src=animalImage(c.animal);animal.alt='';animal.draggable=false;grid.append(animal);}el.append(label,grid);}
+function card(el,c){
+ el.replaceChildren();el.classList.toggle('empty',!c);
+ const label=document.createElement('b');label.className='card-label';label.textContent=el.id==='cpuCard'?'상대 카드':'내 카드';el.append(label);
+ if(!c){const waiting=document.createElement('span');waiting.className='card-waiting';waiting.textContent='?';el.append(waiting);el.setAttribute('aria-label','아직 공개된 카드 없음');return;}
+ const a=animals.find(a=>a[0]===c.animal);el.setAttribute('aria-label',`${a[1]} ${c.count}마리`);
+ const grid=document.createElement('div');grid.className='animal-grid';grid.dataset.count=c.count;
+ const animal=document.createElement('img');animal.src=animalImage(c.animal);animal.alt='';animal.draggable=false;grid.append(animal);
+ const count=document.createElement('strong');count.className='card-multiplier';count.textContent=`× ${c.count}`;
+ el.append(grid,count);
+}
 function render(message){
  const [mine,cpu]=tops(g);card($('myCard'),mine);card($('cpuCard'),cpu);
- $('myCount').textContent=`덱 ${g.hands[0].length}장 · 공개 ${g.piles[0].length}장`;
- $('cpuCount').textContent=`덱 ${g.hands[1].length}장 · 공개 ${g.piles[1].length}장`;
+ $('myCount').textContent=`남은 카드 ${g.hands[0].length}장`;
+ $('cpuCount').textContent=`남은 카드 ${g.hands[1].length}장`;
  $('message').textContent=message|| (g.turn===0?'내 차례예요. 카드를 넘겨주세요.':'컴퓨터가 카드를 넘길 차례예요.');
  $('flip').disabled=paused||g.turn!==0||g.winner!==null;
  $('bell').disabled=paused||g.winner!==null||!g.piles.some(p=>p.length);
