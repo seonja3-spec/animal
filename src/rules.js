@@ -22,7 +22,7 @@ export function shuffle(items, random=Math.random) {
 }
 export function createGame(levelIndex, random=Math.random) {
  const selected=shuffle(animals,random).slice(0,levels[levelIndex].species);
- const deck=shuffle(selected.flatMap(([animal])=>[1,1,1,1,1,2,2,2,3,3,3,4,4,5].map(count=>({animal,count}))),random);
+ const deck=shuffle(selected.flatMap(([animal])=>[1,2,3,4,5].map(count=>({animal,count}))),random);
  return {hands:[deck.filter((_,i)=>i%2===0),deck.filter((_,i)=>i%2===1)],piles:[[],[]],turn:0,winner:null,selected:selected.map(a=>a[0])};
 }
 export function tops(g){return g.piles.map(p=>p.at(-1)||null);}
