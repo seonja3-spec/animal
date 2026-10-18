@@ -9,3 +9,6 @@ snake=뱀, hors=말, yang=양, mong=원숭이, ggo=닭, dog=개, pig=돼지.
 back=숲 배경, frame=카드 테두리, bell1=기본 종, bell2=누른 종.
 
 동물 판정과 카드 수는 이미지 파일명과 별개인 기존 rules.js ID를 사용합니다.
+
+추가 사용자 제공 `1.zip`: main.png → main.webp (첫 화면 전체 그림),
+back frame.png → card-back.webp (카드 뒷면). 그림의 투명 배경과 비율을 유지했습니다.

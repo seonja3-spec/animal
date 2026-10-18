@@ -24,7 +24,7 @@ levels.forEach((level,i)=>{const b=document.createElement('button');b.className=
 function card(el,c){
  el.replaceChildren();el.classList.toggle('empty',!c);
  const label=document.createElement('b');label.className='card-label';label.textContent=el.id==='cpuCard'?'상대 카드':'내 카드';el.append(label);
- if(!c){const waiting=document.createElement('span');waiting.className='card-waiting';waiting.textContent='?';el.append(waiting);el.setAttribute('aria-label','아직 공개된 카드 없음');return;}
+ if(!c){el.replaceChildren();const back=document.createElement('img');back.className='card-back-art';back.src='/assets/animals/card-back.webp';back.alt='';back.draggable=false;el.append(back);el.setAttribute('aria-label','아직 공개되지 않은 카드 뒷면');return;}
  const a=animals.find(a=>a[0]===c.animal);el.setAttribute('aria-label',`${a[1]} ${c.count}마리`);
  const grid=document.createElement('div');grid.className='animal-grid';grid.dataset.count=c.count;
  for(let i=0;i<c.count;i++){const animal=document.createElement('img');animal.src=animalImage(c.animal);animal.alt='';animal.draggable=false;grid.append(animal);}
@@ -55,12 +55,8 @@ function startGame(i){
  $('difficultyMessage').textContent='';$('getCoins').hidden=true;
  $('difficulty').textContent=`${levels[selected].name} · 동물 ${levels[selected].species}종`;show('arena');schedule();
 }
-let friendTimer,cheerTimer;
-const gathering=document.querySelector('.animal-gathering');
-gathering.addEventListener('click',event=>{const friend=event.target.closest('.forest-friend');if(!friend)return;clearTimeout(friendTimer);gathering.querySelector('.greeting')?.classList.remove('greeting');friend.classList.add('greeting');$('friendMessage').textContent=friend.dataset.greeting;gameAudio.effect('correct');friendTimer=setTimeout(()=>friend.classList.remove('greeting'),1000);});
-function cheerFriends(){clearTimeout(cheerTimer);gathering.classList.add('cheering');cheerTimer=setTimeout(()=>gathering.classList.remove('cheering'),650);}
 let welcomeBellTimer;
-$('welcomeBell').onclick=()=>{cheerFriends();gameAudio.effect('bell');clearTimeout(welcomeBellTimer);$('welcomeBell').classList.add('tapped');welcomeBellTimer=setTimeout(()=>$('welcomeBell').classList.remove('tapped'),350);};
+$('welcomeBell').onclick=()=>{gameAudio.effect('bell');clearTimeout(welcomeBellTimer);$('welcomeBell').classList.add('tapped');welcomeBellTimer=setTimeout(()=>$('welcomeBell').classList.remove('tapped'),350);};
 $('start').onclick=()=>{$('difficultyMessage').textContent='';$('getCoins').hidden=true;show('difficultySelect');};
 $('backLobby').onclick=$('getCoins').onclick=()=>show('lobby');
 $('flip').onclick=()=>{if(!g||paused||g.turn!==0)return;if(flip(g,0))gameAudio.effect('flip');schedule();};
