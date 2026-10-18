@@ -20,6 +20,10 @@ asset_urls = {asset.stem: 'data:image/webp;base64,' + base64.b64encode(asset.rea
 import json
 html = html.replace('`/assets/animals/${animalFiles[id]}.webp`',
                     '(' + json.dumps(asset_urls) + ')[animalFiles[id]]')
+# Keep the bundled font available in the offline version too.
+font_path = root / 'public/assets/fonts/Jua-Regular.woff'
+html = html.replace('/assets/fonts/Jua-Regular.woff',
+                    'data:font/woff;base64,' + base64.b64encode(font_path.read_bytes()).decode())
 output = root.parent / 'animal-play-test.html'
 output.write_text(html)
 print(output)

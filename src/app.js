@@ -55,8 +55,12 @@ function startGame(i){
  $('difficultyMessage').textContent='';$('getCoins').hidden=true;
  $('difficulty').textContent=`${levels[selected].name} · 동물 ${levels[selected].species}종`;show('arena');schedule();
 }
+let friendTimer,cheerTimer;
+const gathering=document.querySelector('.animal-gathering');
+gathering.addEventListener('click',event=>{const friend=event.target.closest('.forest-friend');if(!friend)return;clearTimeout(friendTimer);gathering.querySelector('.greeting')?.classList.remove('greeting');friend.classList.add('greeting');$('friendMessage').textContent=friend.dataset.greeting;gameAudio.effect('correct');friendTimer=setTimeout(()=>friend.classList.remove('greeting'),1000);});
+function cheerFriends(){clearTimeout(cheerTimer);gathering.classList.add('cheering');cheerTimer=setTimeout(()=>gathering.classList.remove('cheering'),650);}
 let welcomeBellTimer;
-$('welcomeBell').onclick=()=>{gameAudio.effect('bell');clearTimeout(welcomeBellTimer);$('welcomeBell').classList.add('tapped');welcomeBellTimer=setTimeout(()=>$('welcomeBell').classList.remove('tapped'),350);};
+$('welcomeBell').onclick=()=>{cheerFriends();gameAudio.effect('bell');clearTimeout(welcomeBellTimer);$('welcomeBell').classList.add('tapped');welcomeBellTimer=setTimeout(()=>$('welcomeBell').classList.remove('tapped'),350);};
 $('start').onclick=()=>{$('difficultyMessage').textContent='';$('getCoins').hidden=true;show('difficultySelect');};
 $('backLobby').onclick=$('getCoins').onclick=()=>show('lobby');
 $('flip').onclick=()=>{if(!g||paused||g.turn!==0)return;if(flip(g,0))gameAudio.effect('flip');schedule();};
