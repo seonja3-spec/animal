@@ -1,5 +1,7 @@
 import {animals,levels,createGame,tops,canRing,flip,ring} from './rules.js';
 import {claimDaily,charge,dayKey} from './wallet.js';
+const animalFiles={rat:'mouse',ox:'cow',tiger:'tiger',rabbit:'rat',dragon:'yong',snake:'snake',horse:'hors',sheep:'yang',monkey:'mong',rooster:'ggo',dog:'dog',pig:'pig'};
+const animalImage=(id)=>`/assets/animals/${animalFiles[id]}.webp`;
 const $=id=>document.getElementById(id);
 let wallet={coins:0,day:''},storageAvailable=true;
 try{const saved=JSON.parse(localStorage.getItem('animal-wallet-v1'));if(saved&&Number.isSafeInteger(saved.coins)&&saved.coins>=0&&typeof saved.day==='string')wallet=saved;}catch{storageAvailable=false;}
@@ -14,12 +16,12 @@ function renderWallet(){
 }
 function clearTimers(){generation++;timers.forEach(clearTimeout);timers=[];}
 function later(fn,delay){const current=generation;timers.push(setTimeout(()=>{if(current===generation&&!paused&&g?.winner===null)fn();},delay));}
-function show(id){['lobby','arena','result'].forEach(s=>$(s).hidden=s!==id);}
+function show(id){document.body.dataset.screen=id;['lobby','arena','result'].forEach(s=>$(s).hidden=s!==id);}
 function select(i){selected=i;[...$('levels').children].forEach((b,j)=>{b.classList.toggle('chosen',i===j);b.setAttribute('aria-pressed',String(i===j));});$('start').textContent=`${levels[i].name} 대전 시작 · ${levels[i].fee}🪙`;}
 const levelDescriptions=['천천히 감 잡기','익숙해졌다면 도전!','빠른 눈과 손이 필요해요','한순간도 방심 금지!'];
 const levelIcons=['🌱','🍀','🔥','👑'];
 levels.forEach((level,i)=>{const b=document.createElement('button');b.className='level';b.innerHTML=`<span class="level-icon" aria-hidden="true">${levelIcons[i]}</span><strong>${level.name}</strong><span>${levelDescriptions[i]}</span><small>동물 ${level.species}종 · 참가 ${level.fee}🪙</small><small class="level-reward">이기면 ${level.reward}🪙</small>`;b.onclick=()=>select(i);$('levels').append(b);});
-function card(el,c){el.replaceChildren();if(!c){el.classList.add('empty');el.textContent='🐾';el.setAttribute('aria-label','아직 공개된 카드 없음');return;}el.classList.remove('empty');const a=animals.find(a=>a[0]===c.animal);el.setAttribute('aria-label',`${a[1]} ${c.count}마리`);const label=document.createElement('b');label.className='card-label';label.textContent=`${a[1]} · ${c.count}`;const grid=document.createElement('div');grid.className='animal-grid';for(let i=0;i<c.count;i++){const animal=document.createElement('span');animal.textContent=a[2];grid.append(animal);}el.append(label,grid);}
+function card(el,c){el.replaceChildren();if(!c){el.classList.add('empty');const back=document.createElement('img');back.src='/assets/animals/bell1.webp';back.alt='';back.className='card-back';el.append(back);el.setAttribute('aria-label','아직 공개된 카드 없음');return;}el.classList.remove('empty');const a=animals.find(a=>a[0]===c.animal);el.setAttribute('aria-label',`${a[1]} ${c.count}마리`);const label=document.createElement('b');label.className='card-label';label.textContent=`${a[1]} · ${c.count}`;const grid=document.createElement('div');grid.className='animal-grid';grid.dataset.count=c.count;for(let i=0;i<c.count;i++){const animal=document.createElement('img');animal.src=animalImage(c.animal);animal.alt='';animal.draggable=false;grid.append(animal);}el.append(label,grid);}
 function render(message){
  const [mine,cpu]=tops(g);card($('myCard'),mine);card($('cpuCard'),cpu);
  $('myCount').textContent=`덱 ${g.hands[0].length}장 · 공개 ${g.piles[0].length}장`;
@@ -36,7 +38,8 @@ function schedule(message){clearTimers();render(message);if(g.winner!==null){fin
  // Keep the same card-flip delay on every difficulty. Beginner can still ring before the next CPU flip.
  if(g.turn===1)later(()=>{flip(g,1);schedule();},2900);
 }
-function doRing(player){const outcome=ring(g,player);if(outcome==='ignored')return;if(outcome==='wrong'){render('앗! 다섯 마리가 아니에요. 상대에게 카드 1장을 줬어요.');finish();return;}schedule(outcome==='correct'?(player===0?'딩동! 공개 카드를 모두 가져왔어요.':'컴퓨터가 먼저 종을 눌렀어요!'):'앗! 다섯 마리가 아니에요. 상대에게 카드 1장을 줬어요.');}
+let bellAnimation;
+function doRing(player){const outcome=ring(g,player);if(outcome!=='ignored'){$('bell').classList.add('ringing');clearTimeout(bellAnimation);bellAnimation=setTimeout(()=>$('bell').classList.remove('ringing'),350);}if(outcome==='ignored')return;if(outcome==='wrong'){render('앗! 다섯 마리가 아니에요. 상대에게 카드 1장을 줬어요.');finish();return;}schedule(outcome==='correct'?(player===0?'딩동! 공개 카드를 모두 가져왔어요.':'컴퓨터가 먼저 종을 눌렀어요!'):'앗! 다섯 마리가 아니에요. 상대에게 카드 1장을 줬어요.');}
 $('start').onclick=()=>{if(!charge(wallet,levels[selected].fee)){$('lobbyMessage').textContent='코인이 부족해요. 오늘의 무료 코인을 확인해주세요. 광고 충전은 아직 연결 전입니다.';return;}save();g=createGame(selected);settled=false;paused=false;$('difficulty').textContent=`${levels[selected].name} · 동물 ${levels[selected].species}종`;show('arena');schedule();};
 $('flip').onclick=()=>{if(!g||paused||g.turn!==0)return;flip(g,0);schedule();};
 $('bell').onclick=()=>{if(g&&!paused)doRing(0);};
