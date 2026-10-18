@@ -38,7 +38,18 @@ function render(message){
  $('bell').disabled=paused||g.winner!==null||!g.piles.some(p=>p.length);
  $('pause').textContent=paused?'계속하기':'일시정지';
 }
-function finish(){if(g.winner===null||settled)return;settled=true;clearTimers();if(g.winner===0){wallet.coins+=levels[selected].reward;save();}$('resultEmoji').textContent=g.winner===0?'🏆':'🌱';$('resultTitle').textContent=g.winner===0?'내가 이겼어요!':'다음엔 이길 수 있어요';$('resultMessage').textContent=g.winner===0?`승리 보상 ${levels[selected].reward}코인을 받았어요.`:'이번 대전의 승리 보상은 없어요.';show('result');gameAudio.effect(g.winner===0?'win':'lose');}
+function finish(){
+ if(g.winner===null||settled)return;
+ settled=true;clearTimers();const won=g.winner===0;
+ if(won){wallet.coins+=levels[selected].reward;save();}
+ $('result').dataset.outcome=won?'win':'lose';
+ $('resultArt').src=won?'/assets/animals/result-win.webp':'/assets/animals/result-lose.webp';
+ $('resultArt').alt=won?'종 주위에서 함께 축하하는 동물 친구들':'속상한 호랑이를 위로해 주는 동물 친구들';
+ $('resultBadge').textContent=won?'딩동! 멋진 승리':'괜찮아, 다음 판이 있잖아';
+ $('resultTitle').textContent=won?'오늘의 주인공은 나!':'다음엔 함께 웃어요';
+ $('resultMessage').textContent=won?`승리 보상 ${levels[selected].reward}코인을 받았어요.`:'이번엔 아쉽지만, 친구들이 응원하고 있어요. 승리 보상은 없어요.';
+ show('result');gameAudio.effect(won?'win':'lose');
+}
 function schedule(message){clearTimers();render(message);if(g.winner!==null){finish();return;}if(paused)return;
  const level=levels[selected];
  if(canRing(tops(g)))later(()=>doRing(1),level.min+Math.random()*(level.max-level.min));
@@ -67,6 +78,7 @@ window.addEventListener('pagehide',()=>{pause();gameAudio.setHidden(true);});
 window.addEventListener('pageshow',()=>gameAudio.setHidden(document.hidden));
 $('leave').onclick=()=>{pause();if(confirm('대전을 포기할까요? 참가비는 반환되지 않습니다.')){clearTimers();g=null;show('lobby');}};
 $('home').onclick=()=>{g=null;show('lobby');};
+$('retry').onclick=()=>{g=null;$('difficultyMessage').textContent='';$('getCoins').hidden=true;show('difficultySelect');};
 $('daily').onclick=()=>{const claimed=claimDaily(wallet);save();$('lobbyMessage').textContent=claimed?'오늘의 무료 50코인을 받았어요!':'오늘은 이미 받았어요. 한국 시간 자정 이후 다시 받을 수 있어요.';};
 renderWallet();show('lobby');if(!storageAvailable)$('lobbyMessage').textContent='저장 기능을 사용할 수 없어 코인이 브라우저 종료 후 유지되지 않을 수 있어요.';
 
@@ -79,7 +91,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')void gam
 renderAudioSettings();
 
 // Illustrated pressed state for keyboard activation as well as touch.
-for(const button of [$('start'),...$('levels').children]){
+for(const button of [$('start'),$('retry'),...$('levels').children]){
  button.addEventListener('keydown',event=>{if(event.key===' '||event.key==='Enter')button.classList.add('wood-pressed');});
  for(const type of ['keyup','blur'])button.addEventListener(type,()=>button.classList.remove('wood-pressed'));
 }
