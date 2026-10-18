@@ -35,8 +35,8 @@ function finish(){if(g.winner===null||settled)return;settled=true;clearTimers();
 function schedule(message){clearTimers();render(message);if(g.winner!==null){finish();return;}if(paused)return;
  const level=levels[selected];
  if(canRing(tops(g)))later(()=>doRing(1),level.min+Math.random()*(level.max-level.min));
- // Keep the same card-flip delay on every difficulty. Beginner can still ring before the next CPU flip.
- if(g.turn===1)later(()=>{flip(g,1);schedule();},2900);
+ // Flip promptly, but keep a valid five visible until the bell is resolved.
+ if(g.turn===1&&!canRing(tops(g)))later(()=>{flip(g,1);schedule();},180);
 }
 let bellAnimation;
 function doRing(player){const outcome=ring(g,player);if(outcome!=='ignored'){$('bell').classList.add('ringing');clearTimeout(bellAnimation);bellAnimation=setTimeout(()=>$('bell').classList.remove('ringing'),350);}if(outcome==='ignored')return;if(outcome==='wrong'){render('앗! 다섯 마리가 아니에요. 상대에게 카드 1장을 줬어요.');finish();return;}schedule(outcome==='correct'?(player===0?'딩동! 공개 카드를 모두 가져왔어요.':'컴퓨터가 먼저 종을 눌렀어요!'):'앗! 다섯 마리가 아니에요. 상대에게 카드 1장을 줬어요.');}
