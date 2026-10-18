@@ -1,16 +1,24 @@
 import {animals,levels,createGame,tops,canRing,flip,ring} from './rules.js';
-import {claimDaily,charge} from './wallet.js';
+import {claimDaily,charge,dayKey} from './wallet.js';
 const $=id=>document.getElementById(id);
 let wallet={coins:0,day:''},storageAvailable=true;
 try{const saved=JSON.parse(localStorage.getItem('animal-wallet-v1'));if(saved&&Number.isSafeInteger(saved.coins)&&saved.coins>=0&&typeof saved.day==='string')wallet=saved;}catch{storageAvailable=false;}
 let g=null,selected=0,paused=false,timers=[],generation=0,settled=false;
 function save(){try{localStorage.setItem('animal-wallet-v1',JSON.stringify(wallet));}catch{storageAvailable=false;}renderWallet();}
-function renderWallet(){ $('coins').textContent=wallet.coins; }
+function renderWallet(){
+ $('coins').textContent=wallet.coins;
+ const claimed=wallet.day===dayKey();
+ $('daily').textContent=claimed?'오늘 수령 완료 ✓':'선물 받기';
+ $('daily').disabled=claimed;
+ $('daily').setAttribute('aria-label',claimed?'오늘의 무료 코인 수령 완료':'무료 50코인 받기');
+}
 function clearTimers(){generation++;timers.forEach(clearTimeout);timers=[];}
 function later(fn,delay){const current=generation;timers.push(setTimeout(()=>{if(current===generation&&!paused&&g?.winner===null)fn();},delay));}
 function show(id){['lobby','arena','result'].forEach(s=>$(s).hidden=s!==id);}
 function select(i){selected=i;[...$('levels').children].forEach((b,j)=>{b.classList.toggle('chosen',i===j);b.setAttribute('aria-pressed',String(i===j));});$('start').textContent=`${levels[i].name} 대전 시작 · ${levels[i].fee}🪙`;}
-levels.forEach((level,i)=>{const b=document.createElement('button');b.className='level';b.innerHTML=`<strong>${level.name}</strong><span>동물 ${level.species}종 · ${level.min/1000}~${level.max/1000}초</span><small>참가 ${level.fee}🪙 / 승리 ${level.reward}🪙</small>`;b.onclick=()=>select(i);$('levels').append(b);});
+const levelDescriptions=['천천히 감 잡기','익숙해졌다면 도전!','빠른 눈과 손이 필요해요','한순간도 방심 금지!'];
+const levelIcons=['🌱','🍀','🔥','👑'];
+levels.forEach((level,i)=>{const b=document.createElement('button');b.className='level';b.innerHTML=`<span class="level-icon" aria-hidden="true">${levelIcons[i]}</span><strong>${level.name}</strong><span>${levelDescriptions[i]}</span><small>동물 ${level.species}종 · 참가 ${level.fee}🪙</small><small class="level-reward">이기면 ${level.reward}🪙</small>`;b.onclick=()=>select(i);$('levels').append(b);});
 function card(el,c){el.replaceChildren();if(!c){el.classList.add('empty');el.textContent='🐾';el.setAttribute('aria-label','아직 공개된 카드 없음');return;}el.classList.remove('empty');const a=animals.find(a=>a[0]===c.animal);el.setAttribute('aria-label',`${a[1]} ${c.count}마리`);const label=document.createElement('b');label.className='card-label';label.textContent=`${a[1]} · ${c.count}`;const grid=document.createElement('div');grid.className='animal-grid';for(let i=0;i<c.count;i++){const animal=document.createElement('span');animal.textContent=a[2];grid.append(animal);}el.append(label,grid);}
 function render(message){
  const [mine,cpu]=tops(g);card($('myCard'),mine);card($('cpuCard'),cpu);
