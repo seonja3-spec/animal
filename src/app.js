@@ -7,7 +7,7 @@ const animalImage=(id)=>`/assets/animals/${animalFiles[id]}.webp`;
 const $=id=>document.getElementById(id);
 let wallet={coins:0,day:''},storageAvailable=true;
 try{const saved=JSON.parse(localStorage.getItem('animal-wallet-v1'));if(saved&&Number.isSafeInteger(saved.coins)&&saved.coins>=0&&typeof saved.day==='string')wallet=saved;}catch{storageAvailable=false;}
-const visualAnimations=new Set();let feedbackTimer;
+const visualAnimations=new Set();let feedbackTimer;const counterTimers=new Map();
 let g=null,selected=0,paused=false,timers=[],generation=0,settled=false;
 let progress;try{progress=loadProgress(localStorage);}catch{progress=loadProgress(null);}
 let vibrationEnabled=false;try{vibrationEnabled=localStorage.getItem('animal-vibration-v1')==='true';}catch{}
@@ -41,8 +41,7 @@ function card(el,c){
 function render(message){
  const [mine,cpu]=tops(g);card($('myCard'),mine);card($('cpuCard'),cpu);
  updateDeck('myDeck',g.hands[0].length);updateDeck('cpuDeck',g.hands[1].length);
- $('myCount').textContent=`남은 카드 ${g.hands[0].length}장`;
- $('cpuCount').textContent=`남은 카드 ${g.hands[1].length}장`;
+ updateCounter('my',g.hands[0].length);updateCounter('cpu',g.hands[1].length);
  $('message').textContent=message|| (g.turn===0?'내 차례예요. 카드를 넘겨주세요.':'컴퓨터가 카드를 넘길 차례예요.');
  $('flip').disabled=paused||g.turn!==0||g.winner!==null;
  $('bell').disabled=paused||g.winner!==null||!g.piles.some(p=>p.length);
@@ -83,7 +82,7 @@ function doRing(player){
 function startGame(i){
  if(g&&g.winner===null)return;
  if(!charge(wallet,levels[i].fee)){$('difficultyMessage').textContent='코인이 부족해요. 처음 화면에서 오늘의 무료 코인을 확인해주세요.';$('getCoins').hidden=false;return;}
- selected=i;save();g=createGame(selected);settled=false;paused=false;matchElapsed=0;activeSince=performance.now();
+ resetCounters();selected=i;save();g=createGame(selected);settled=false;paused=false;matchElapsed=0;activeSince=performance.now();
  $('difficultyMessage').textContent='';$('getCoins').hidden=true;
  $('difficulty').textContent=`${levels[selected].name} · 동물 ${levels[selected].species}종`;show('arena');schedule();
 }
@@ -141,8 +140,20 @@ $('tutorialContinue').onclick=$('skipTutorial').onclick=finishTutorial;
 
 function reducedMotion(){return matchMedia('(prefers-reduced-motion: reduce)').matches;}
 function animateElement(el,frames,options){if(reducedMotion())return;const animation=el.animate(frames,options);visualAnimations.add(animation);animation.finished.catch(()=>{}).finally(()=>visualAnimations.delete(animation));return animation;}
-function clearVisuals(){clearTimeout(feedbackTimer);for(const animation of visualAnimations)animation.cancel();visualAnimations.clear();$('fxLayer').replaceChildren();$('judgeFeedback').hidden=true;}
+function clearVisuals(){clearCounterDeltas();clearTimeout(feedbackTimer);for(const animation of visualAnimations)animation.cancel();visualAnimations.clear();$('fxLayer').replaceChildren();$('judgeFeedback').hidden=true;}
 function updateDeck(id,count){const el=$(id);el.style.setProperty('--deck-depth',String(Math.min(6,Math.ceil(count/7))));el.dataset.low=String(count<=5);el.dataset.empty=String(count===0);el.closest('.player').classList.toggle('low-cards',count<=5);}
 function turnCard(player){if(!flip(g,player)){schedule();return;}gameAudio.effect('flip');schedule();if(g.winner!==null)return;const el=$(player===0?'myCard':'cpuCard');for(const a of el.getAnimations())a.cancel();animateElement(el,[{transform:'perspective(600px) rotateY(-65deg)',filter:'brightness(.8)'},{transform:'perspective(600px) rotateY(0)',filter:'brightness(1)'}],{duration:160,easing:'ease-out'});}
 function showJudgement(outcome,player,count){clearTimeout(feedbackTimer);const el=$('judgeFeedback');el.dataset.kind=outcome==='wrong'?'wrong':player===0?'correct':'cpu';el.textContent=outcome==='wrong'?'앗! 다섯 마리가 아니에요':player===0?`내가 먼저! +${count}장`:`컴퓨터가 먼저! +${count}장`;el.hidden=false;animateElement(el,[{opacity:0,transform:'translateY(8px) scale(.9)'},{opacity:1,transform:'translateY(0) scale(1)'}],{duration:180,easing:'ease-out'});feedbackTimer=setTimeout(()=>el.hidden=true,1000);if(outcome==='correct'&&!reducedMotion()){for(let i=0;i<7;i++){const star=document.createElement('span');star.className='bell-spark';star.textContent='✦';$('fxLayer').append(star);const bell=$('bell').getBoundingClientRect(),root=$('fxLayer').getBoundingClientRect();star.style.left=`${bell.x+bell.width/2-root.x}px`;star.style.top=`${bell.y+bell.height/2-root.y}px`;const angle=i/7*Math.PI*2;const animation=animateElement(star,[{transform:'translate(-50%,-50%) scale(.3)',opacity:1},{transform:`translate(calc(-50% + ${Math.cos(angle)*65}px),calc(-50% + ${Math.sin(angle)*65}px)) scale(1)`,opacity:0}],{duration:480,easing:'ease-out'});animation?.finished.catch(()=>{}).finally(()=>star.remove());}}}
 function collectCards(snapshots,rects,player){if(reducedMotion())return;const target=$(player===0?'myDeck':'cpuDeck').getBoundingClientRect(),root=$('fxLayer').getBoundingClientRect();snapshots.forEach((clone,i)=>{clone.removeAttribute('id');clone.classList.remove('card');clone.classList.add('flying-card');clone.setAttribute('aria-hidden','true');const from=rects[i];Object.assign(clone.style,{left:`${from.x-root.x}px`,top:`${from.y-root.y}px`,width:`${from.width}px`,height:`${from.height}px`});$('fxLayer').append(clone);const animation=animateElement(clone,[{transform:'translate(0,0) scale(1)',opacity:.9},{transform:`translate(${target.x+target.width/2-from.x-from.width/2}px,${target.y+target.height/2-from.y-from.height/2}px) scale(.12)`,opacity:0}],{duration:360,delay:i*35,easing:'ease-in'});animation?.finished.catch(()=>{}).finally(()=>clone.remove());});animateElement($(player===0?'myCount':'cpuCount'),[{transform:'scale(1)'},{transform:'scale(1.2)',color:'#ffe17d'},{transform:'scale(1)'}],{duration:400});}
+
+function clearCounterDeltas(){for(const timer of counterTimers.values())clearTimeout(timer);counterTimers.clear();for(const id of ['myCount','cpuCount'])$(id).querySelector('.count-delta').hidden=true;}
+function resetCounters(){clearCounterDeltas();for(const id of ['myCount','cpuCount'])delete $(id).dataset.count;}
+function updateCounter(prefix,count){
+ const el=$(prefix+'Count'),previous=el.dataset.count===undefined?null:Number(el.dataset.count),delta=el.querySelector('.count-delta');
+ el.querySelector('.count-number').textContent=String(count);el.dataset.count=String(count);el.dataset.low=String(count<=5);el.setAttribute('aria-label',`${el.dataset.owner} 남은 카드 ${count}장`);
+ const warning=$(prefix+'Low');warning.hidden=count>5;warning.textContent=count===0?'뒤집을 카드가 없어요':'카드가 얼마 안 남았어요!';
+ if(previous===null||previous===count)return;
+ clearTimeout(counterTimers.get(prefix));const difference=count-previous;delta.textContent=`${difference>0?'+':''}${difference}`;delta.dataset.direction=difference>0?'gain':'loss';delta.hidden=false;
+ animateElement(el.querySelector('.count-number'),[{transform:'scale(1)'},{transform:'scale(1.18)'},{transform:'scale(1)'}],{duration:240,easing:'ease-out'});
+ counterTimers.set(prefix,setTimeout(()=>{delta.hidden=true;counterTimers.delete(prefix);},900));
+}
