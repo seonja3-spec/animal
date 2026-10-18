@@ -19,8 +19,7 @@ function clearTimers(){generation++;timers.forEach(clearTimeout);timers=[];}
 function later(fn,delay){const current=generation;timers.push(setTimeout(()=>{if(current===generation&&!paused&&g?.winner===null)fn();},delay));}
 function show(id){gameAudio.setPaused(false);gameAudio.setScene(id==='arena'?'arena':id==='result'?'result':'lobby');document.body.dataset.screen=id;['lobby','difficultySelect','arena','result'].forEach(s=>$(s).hidden=s!==id);}
 const levelDescriptions=['천천히 감 잡기','익숙해졌다면 도전!','빠른 눈과 손이 필요해요','한순간도 방심 금지!'];
-const levelIcons=['🌱','🍀','🔥','👑'];
-levels.forEach((level,i)=>{const b=document.createElement('button');b.className='level';b.innerHTML=`<span class="level-icon" aria-hidden="true">${levelIcons[i]}</span><strong>${level.name}</strong><span>${levelDescriptions[i]}</span><small>동물 ${level.species}종 · 참가 ${level.fee}🪙</small><small class="level-reward">이기면 ${level.reward}🪙</small>`;b.setAttribute('aria-label',`${level.name} 대전 시작, 참가 ${level.fee}코인`);b.onclick=()=>startGame(i);$('levels').append(b);});
+levels.forEach((level,i)=>{const b=document.createElement('button');b.className='level';b.innerHTML=`<span class="level-sign"><strong>${level.name}</strong></span><span class="level-description">${levelDescriptions[i]}</span><small>동물 ${level.species}종 · 참가 ${level.fee}🪙</small><small class="level-reward">이기면 ${level.reward}🪙</small>`;b.setAttribute('aria-label',`${level.name} 대전 시작, 참가 ${level.fee}코인`);b.onclick=()=>startGame(i);$('levels').append(b);});
 function card(el,c){
  el.replaceChildren();el.classList.toggle('empty',!c);
  const label=document.createElement('b');label.className='card-label';label.textContent=el.id==='cpuCard'?'상대 카드':'내 카드';el.append(label);
@@ -78,3 +77,9 @@ document.addEventListener('pointerdown',()=>void gameAudio.unlock(),{capture:tru
 document.addEventListener('click',()=>void gameAudio.unlock(),{capture:true});
 document.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' ')void gameAudio.unlock();},{capture:true});
 renderAudioSettings();
+
+// Illustrated pressed state for keyboard activation as well as touch.
+for(const button of [$('start'),...$('levels').children]){
+ button.addEventListener('keydown',event=>{if(event.key===' '||event.key==='Enter')button.classList.add('wood-pressed');});
+ for(const type of ['keyup','blur'])button.addEventListener(type,()=>button.classList.remove('wood-pressed'));
+}

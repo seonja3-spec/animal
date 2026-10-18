@@ -12,3 +12,6 @@ back=숲 배경, frame=카드 테두리, bell1=기본 종, bell2=누른 종.
 
 추가 사용자 제공 `1.zip`: main.png → main.webp (첫 화면 전체 그림),
 back frame.png → card-back.webp (카드 뒷면). 그림의 투명 배경과 비율을 유지했습니다.
+
+사용자 제공 `2.zip`: 버튼1.png → button-1.webp (기본 나무 버튼),
+버튼2.png → button-2.webp (누른 나무 버튼). 시작하기와 난이도 선택에 사용합니다.
