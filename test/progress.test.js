@@ -1,0 +1,5 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {emptyProgress,loadProgress,recordMatch} from '../src/progress.js';
+test('records count completed games and keep fastest wins per difficulty',()=>{const p=emptyProgress();recordMatch(p,false,0,3000);assert.equal(p.wins,0);assert.equal(p.fastestWinMs[0],null);recordMatch(p,true,0,12000);recordMatch(p,true,0,18000);recordMatch(p,true,0,9000);recordMatch(p,true,1,7000);assert.equal(p.completed,5);assert.equal(p.wins,4);assert.deepEqual(p.fastestWinMs,[9000,7000,null,null]);});
+test('stored progress validates damaged and unavailable local storage',()=>{assert.deepEqual(loadProgress({getItem:()=>'{broken'}),emptyProgress());assert.deepEqual(loadProgress(null),emptyProgress());const p=loadProgress({getItem:()=>JSON.stringify({tutorialDone:true,completed:2,wins:9,fastestWinMs:[-1,'900',Infinity,500]})});assert.equal(p.tutorialDone,true);assert.equal(p.wins,0);assert.deepEqual(p.fastestWinMs,[null,null,null,500]);});
