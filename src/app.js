@@ -27,9 +27,8 @@ function card(el,c){
  if(!c){const waiting=document.createElement('span');waiting.className='card-waiting';waiting.textContent='?';el.append(waiting);el.setAttribute('aria-label','아직 공개된 카드 없음');return;}
  const a=animals.find(a=>a[0]===c.animal);el.setAttribute('aria-label',`${a[1]} ${c.count}마리`);
  const grid=document.createElement('div');grid.className='animal-grid';grid.dataset.count=c.count;
- const animal=document.createElement('img');animal.src=animalImage(c.animal);animal.alt='';animal.draggable=false;grid.append(animal);
- const count=document.createElement('strong');count.className='card-multiplier';count.textContent=`× ${c.count}`;
- el.append(grid,count);
+ for(let i=0;i<c.count;i++){const animal=document.createElement('img');animal.src=animalImage(c.animal);animal.alt='';animal.draggable=false;grid.append(animal);}
+ el.append(grid);
 }
 function render(message){
  const [mine,cpu]=tops(g);card($('myCard'),mine);card($('cpuCard'),cpu);
@@ -45,7 +44,7 @@ function schedule(message){clearTimers();render(message);if(g.winner!==null){fin
  const level=levels[selected];
  if(canRing(tops(g)))later(()=>doRing(1),level.min+Math.random()*(level.max-level.min));
  // Flip promptly, but keep a valid five visible until the bell is resolved.
- if(g.turn===1&&!canRing(tops(g)))later(()=>{flip(g,1);schedule();},180);
+ if(g.turn===1&&!canRing(tops(g)))later(()=>{flip(g,1);schedule();},700);
 }
 let bellAnimation;
 function doRing(player){const outcome=ring(g,player);if(outcome!=='ignored'){$('bell').classList.add('ringing');clearTimeout(bellAnimation);bellAnimation=setTimeout(()=>$('bell').classList.remove('ringing'),350);}if(outcome==='ignored')return;if(outcome==='wrong'){render('앗! 다섯 마리가 아니에요. 상대에게 카드 1장을 줬어요.');finish();return;}schedule(outcome==='correct'?(player===0?'딩동! 공개 카드를 모두 가져왔어요.':'컴퓨터가 먼저 종을 눌렀어요!'):'앗! 다섯 마리가 아니에요. 상대에게 카드 1장을 줬어요.');}
