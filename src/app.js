@@ -1,3 +1,4 @@
+import {initializePlatformLayout} from './platform-layout.js';
 import {loadProgress,recordMatch} from './progress.js';
 import {gameAudio} from './audio.js';
 import {animals,levels,createGame,tops,canRing,flip,ring} from './rules.js';
@@ -157,3 +158,7 @@ function updateCounter(prefix,count){
  animateElement(el.querySelector('.count-number'),[{transform:'scale(1)'},{transform:'scale(1.18)'},{transform:'scale(1)'}],{duration:240,easing:'ease-out'});
  counterTimers.set(prefix,setTimeout(()=>{delta.hidden=true;counterTimers.delete(prefix);},900));
 }
+
+let disposePlatformLayout=initializePlatformLayout();
+window.addEventListener('pagehide',()=>{disposePlatformLayout?.();disposePlatformLayout=null;});
+window.addEventListener('pageshow',()=>{if(!disposePlatformLayout)disposePlatformLayout=initializePlatformLayout();});
